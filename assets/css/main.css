@@ -789,9 +789,9 @@ body {
 }
 
 .tech-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
 }
 
 .tech-item {
@@ -803,6 +803,8 @@ body {
     font-size: 0.9rem;
     color: var(--text-secondary);
     transition: var(--transition-fast);
+    flex: 1 0 auto;
+    max-width: fit-content;
 }
 
 .tech-item:hover {
