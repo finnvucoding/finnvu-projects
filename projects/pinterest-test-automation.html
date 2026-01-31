@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinterest Test Automation - Finn Vu Portfolio</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/project-detail.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-brand">
+                    <a href="../index.html" class="brand-link">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Portfolio</span>
+                    </a>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="../index.html" class="nav-link"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="https://github.com/finnvucoding" class="nav-link" target="_blank"><i class="fab fa-github"></i> GitHub</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="project-detail">
+        <div class="container">
+            <!-- Project Hero -->
+            <section class="project-hero">
+                <div class="project-icon-large">
+                    <i class="fas fa-vial"></i>
+                </div>
+                <h1>Pinterest Test Automation Framework</h1>
+                <p class="project-tagline">
+                    Professional automation testing framework cho Pinterest sử dụng Playwright + Pytest với Page Object Model
+                </p>
+                <div class="tech-tags-large">
+                    <span class="tech-tag python"><i class="fab fa-python"></i> Python</span>
+                    <span class="tech-tag playwright"><i class="fas fa-theater-masks"></i> Playwright</span>
+                    <span class="tech-tag pytest"><i class="fas fa-flask"></i> Pytest</span>
+                    <span class="tech-tag pom"><i class="fas fa-sitemap"></i> Page Object Model</span>
+                </div>
+            </section>
+
+            <!-- Project Overview -->
+            <section class="project-section">
+                <h2><i class="fas fa-info-circle"></i> Tổng Quan</h2>
+                <div class="overview-content">
+                    <p>
+                        <strong>Pinterest Test Automation</strong> là một framework automation testing chuyên nghiệp 
+                        được xây dựng để test các tính năng của Pinterest bao gồm login, search, và download images.
+                        Framework sử dụng kiến trúc <strong>Page Object Model (POM)</strong> để dễ dàng maintain và mở rộng.
+                    </p>
+                    <div class="highlight-box">
+                        <h4><i class="fas fa-star"></i> Điểm Nổi Bật</h4>
+                        <ul>
+                            <li>Kiến trúc POM chuẩn enterprise với BasePage pattern</li>
+                            <li>Hỗ trợ video recording cho debugging</li>
+                            <li>HTML report chi tiết với screenshots</li>
+                            <li>Fallback locator strategy cho reliability</li>
+                            <li>Environment-based configuration</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Architecture -->
+            <section class="project-section">
+                <h2><i class="fas fa-project-diagram"></i> Kiến Trúc Project</h2>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">📁 Project Structure</span>
+                    </div>
+                    <pre><code class="language-text">Pinterest_test/
+├── config/                 # Cấu hình (settings, environment)
+│   ├── __init__.py
+│   └── settings.py         # Environment configs, URLs, Timeouts
+├── core/                   # Base components
+│   ├── __init__.py
+│   ├── base_page.py        # BasePage với common actions
+│   └── logger.py           # Logging utilities
+├── pages/                  # Page Object Models
+│   ├── __init__.py
+│   ├── locators.py         # Tập trung locators
+│   ├── home_page.py        # Pinterest Home Page
+│   ├── login_page.py       # Login functionality
+│   └── search_result_page.py  # Search results
+├── tests/
+│   ├── conftest.py         # Pytest fixtures
+│   └── ui/
+│       ├── test_pinterest_search.py
+│       └── test_download_5_img.py
+├── utils/
+│   └── pinterest_api.py    # API client for downloads
+├── downloads/              # Downloaded images
+├── screenshots/            # Failure screenshots
+├── logs/videos/            # Test recordings
+└── reports/                # HTML test reports</code></pre>
+                </div>
+            </section>
+
+            <!-- Core Components -->
+            <section class="project-section">
+                <h2><i class="fas fa-cogs"></i> Core Components</h2>
+                
+                <!-- BasePage -->
+                <div class="component-card">
+                    <h3><i class="fas fa-layer-group"></i> BasePage Pattern</h3>
+                    <p>Base class cung cấp common actions với built-in logging và error handling:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">core/base_page.py</span>
+                        </div>
+                        <pre><code class="language-python">from playwright.sync_api import Locator, Page, expect
+from config import settings
+from core.logger import log
+
+class BasePage:
+    def __init__(self, page: Page):
+        self.page = page
+
+    def open(self, url: str):
+        logger.info(f"🌍 Navigating to: {url}")
+        self.page.goto(url, wait_until="domcontentloaded")
+
+    def click(self, locator: Locator, description: str = "element", **kwargs):
+        """Wrapper cho click với log chi tiết."""
+        logger.info(f"🖱️ Clicking on '{description}'")
+        try:
+            locator.click(**kwargs)
+        except Exception as e:
+            logger.error(f"❌ Failed to click '{description}': {str(e)}")
+            self.take_screenshot(f"fail_click_{description}")
+            raise e
+
+    def is_visible_slow(self, locator: Locator, timeout: int = 3000) -> bool:
+        """Chờ một chút xem có hiện ra không"""
+        try:
+            locator.wait_for(state="visible", timeout=timeout)
+            return True
+        except Exception:
+            return False
+
+    def take_screenshot(self, name: str):
+        path = f"screenshots/{name}_{timestamp}.png"
+        self.page.screenshot(path=path, full_page=True)
+        logger.info(f"📸 Screenshot saved: {path}")</code></pre>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="component-card">
+                    <h3><i class="fas fa-sliders-h"></i> Configuration System</h3>
+                    <p>Dataclass-based configuration với environment support:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">config/settings.py</span>
+                        </div>
+                        <pre><code class="language-python">from dataclasses import dataclass, field
+from enum import Enum
+from dotenv import load_dotenv
+
+class Environment(Enum):
+    LOCAL = "local"
+    STAGING = "staging"
+    PRODUCTION = "production"
+
+@dataclass(frozen=True)
+class TimeoutConfig:
+    """Timeout configurations in milliseconds."""
+    DEFAULT_TIMEOUT: int = 30000
+    TYPING_TIMEOUT: int = random.randint(300, 500)
+    SHORT13_TIMEOUT: int = random.randint(1000, 3000)
+    LONG_TIMEOUT: int = 60000
+
+@dataclass(frozen=True)
+class BrowserSettings:
+    """Browser configurations."""
+    HEADLESS: bool = field(
+        default_factory=lambda: os.getenv("HEADLESS", "false").lower() == "true"
+    )
+    RECORD_VIDEO: bool = field(
+        default_factory=lambda: os.getenv("RECORD_VIDEO", "false").lower() == "true"
+    )
+    VIEWPORT: Dict[str, int] = field(
+        default_factory=lambda: {"width": 1080, "height": 720}
+    )</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Objects -->
+            <section class="project-section">
+                <h2><i class="fas fa-file-code"></i> Page Objects</h2>
+                
+                <div class="component-card">
+                    <h3><i class="fas fa-home"></i> HomePage - Fallback Locator Strategy</h3>
+                    <p>Tìm element với nhiều strategy để tăng reliability:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">pages/home_page.py</span>
+                        </div>
+                        <pre><code class="language-python">class HomePage(BasePage):
+    def search_for(self, keyword: str):
+        logger.info(f"🔍 Searching for: '{keyword}'")
+        search_box = self._get_active_search_box()
+        search_box.click()
+        search_box.type(keyword, delay=settings.timeouts.TYPING_TIMEOUT)
+        search_box.press("Enter")
+
+    def _get_active_search_box(self) -> Locator:
+        """Tìm ô search với Fallback strategy"""
+        # Option 1: data-test-id - Ưu tiên số 1
+        box_technical = self.page.locator(Loc.SEARCH_INPUT_SELECTOR)
+        if self.is_visible_slow(box_technical, timeout=2000):
+            return box_technical
+
+        # Option 2: name attribute (Fallback 1)
+        box_by_name = self.page.locator(Loc.SEARCH_INPUT_BY_NAME)
+        if self.is_visible_slow(box_by_name, timeout=2000):
+            logger.warning("⚠️ Using name attribute fallback.")
+            return box_by_name
+
+        # Option 3: Placeholder regex (Fallback 2)
+        box_label = self.page.get_by_placeholder(
+            re.compile(Loc.SEARCH_PLACEHOLDER_PATTERN, re.IGNORECASE)
+        )
+        if self.is_visible_slow(box_label, timeout=2000):
+            return box_label
+
+        raise Exception("❌ Search box not found!")</code></pre>
+                    </div>
+                </div>
+
+                <div class="component-card">
+                    <h3><i class="fas fa-images"></i> SearchResultPage - Image Extraction</h3>
+                    <p>Extract high-resolution image URLs với srcset parsing:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">pages/search_result_page.py</span>
+                        </div>
+                        <pre><code class="language-python">class SearchResultPage(BasePage):
+    def get_image_urls(self, limit: int = 5) -> List[str]:
+        logger.info(f"🔍 Extracting top {limit} image URLs...")
+        self.wait_for_results(min_count=limit)
+        
+        images = self.page.locator(Loc.PIN_IMAGE_LOADED)
+        urls = []
+        
+        for i in range(min(images.count(), limit)):
+            img = images.nth(i)
+            srcset = img.get_attribute("srcset")
+            
+            if srcset:
+                # Get highest resolution (4x)
+                final_url = srcset.split(",")[-1].strip().split(" ")[0]
+            else:
+                final_url = img.get_attribute("src")
+                
+            if final_url:
+                urls.append(final_url)
+                
+        return urls
+
+    def wait_for_results(self, min_count: int = 1, timeout: int = 10000) -> int:
+        """Wait until at least N pins are visible."""
+        self.page.locator(Loc.PIN_ITEM).nth(min_count - 1).wait_for(
+            state="visible", timeout=timeout
+        )
+        return self.get_loaded_pins_count()</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Test Cases -->
+            <section class="project-section">
+                <h2><i class="fas fa-flask"></i> Test Cases</h2>
+                
+                <div class="component-card">
+                    <h3><i class="fas fa-search"></i> Search Flow Test</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">tests/ui/test_pinterest_search.py</span>
+                        </div>
+                        <pre><code class="language-python">@pytest.mark.smoke
+class TestPinterestSearch:
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup_authenticated_state(self, login_page: LoginPage):
+        logger.info("[SETUP] 🔐 Ensuring authenticated state...")
+        login_page.navigate()
+        login_page.login(settings.credentials.email, settings.credentials.password)
+
+    @pytest.mark.parametrize("keyword", [
+        pytest.param("Minimalist Decor", id="minimalist_decor"),
+        pytest.param("Cyberpunk Art", id="cyberpunk_art"),
+    ])
+    def test_search_flow(
+        self,
+        home_page: HomePage,
+        search_result_page: SearchResultPage,
+        keyword: str,
+    ):
+        home_page.search_for(keyword)
+        actual_count = search_result_page.wait_for_results(min_count=1)
+        
+        assert actual_count > 0, f"Expected pins for '{keyword}', found 0"
+        logger.info(f"[TEST] ✅ Found {actual_count} pins for '{keyword}'")</code></pre>
+                    </div>
+                </div>
+
+                <div class="component-card">
+                    <h3><i class="fas fa-download"></i> Image Download Test</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">tests/ui/test_download_5_img.py</span>
+                        </div>
+                        <pre><code class="language-python">@pytest.mark.smoke
+class TestImageDownload:
+    
+    def test_download_high_res_images(
+        self,
+        home_page: HomePage,
+        search_result_page: SearchResultPage,
+        api_client: PinterestAPIClient
+    ):
+        # 1. SEARCH
+        keyword = "4K Wallpaper"
+        home_page.search_for(keyword)
+        
+        # 2. GET URLS
+        target_count = 5
+        image_urls = search_result_page.get_image_urls(limit=target_count)
+        assert len(image_urls) >= target_count
+        
+        # 3. DOWNLOAD
+        save_dir = DOWNLOAD_DIR / keyword.replace(" ", "_")
+        save_dir.mkdir(parents=True, exist_ok=True)
+        
+        downloaded_count = 0
+        for i, url in enumerate(image_urls):
+            if api_client.download_file(url, save_path):
+                downloaded_count += 1
+                
+        # 4. VERIFY
+        assert downloaded_count == target_count
+        for file in save_dir.glob("*"):
+            assert file.stat().st_size > 1024  # Sanity check</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How to Run -->
+            <section class="project-section">
+                <h2><i class="fas fa-terminal"></i> Cách Chạy</h2>
+                <div class="steps-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Cài đặt Dependencies</h4>
+                            <div class="code-block compact">
+                                <pre><code class="language-bash"># Tạo virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+
+# Cài dependencies
+pip install -r requirements.txt
+
+# Cài Playwright browsers
+playwright install chromium</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Cấu hình Environment</h4>
+                            <div class="code-block compact">
+                                <pre><code class="language-bash"># Tạo file .env
+PINTEREST_EMAIL=your_email@gmail.com
+PINTEREST_PASSWORD=your_password
+HEADLESS=false
+SLOW_MO=0
+RECORD_VIDEO=true</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Chạy Tests</h4>
+                            <div class="code-block compact">
+                                <pre><code class="language-bash"># Chạy tất cả tests
+pytest
+
+# Chạy với browser hiển thị
+pytest --headed
+
+# Chạy test cụ thể
+pytest tests/ui/test_pinterest_search.py
+
+# Chạy với HTML report
+pytest --html=reports/report.html</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features -->
+            <section class="project-section">
+                <h2><i class="fas fa-list-check"></i> Tính Năng</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-sitemap"></i>
+                        <h4>Page Object Model</h4>
+                        <p>Kiến trúc POM chuẩn với BasePage, Locators tập trung</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-video"></i>
+                        <h4>Video Recording</h4>
+                        <p>Ghi lại test execution để dễ debug</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-camera"></i>
+                        <h4>Auto Screenshots</h4>
+                        <p>Tự động chụp màn hình khi test fail</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-file-alt"></i>
+                        <h4>HTML Reports</h4>
+                        <p>Báo cáo chi tiết với pytest-html</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>Fallback Strategy</h4>
+                        <p>Multiple locator strategies cho reliability</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-cog"></i>
+                        <h4>Environment Config</h4>
+                        <p>Hỗ trợ Local/Staging/Production environments</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tech Stack -->
+            <section class="project-section">
+                <h2><i class="fas fa-layer-group"></i> Tech Stack</h2>
+                <div class="tech-stack-grid">
+                    <div class="tech-item-large">
+                        <i class="fab fa-python"></i>
+                        <span>Python 3.10+</span>
+                    </div>
+                    <div class="tech-item-large">
+                        <i class="fas fa-theater-masks"></i>
+                        <span>Playwright</span>
+                    </div>
+                    <div class="tech-item-large">
+                        <i class="fas fa-flask"></i>
+                        <span>Pytest</span>
+                    </div>
+                    <div class="tech-item-large">
+                        <i class="fas fa-file-code"></i>
+                        <span>pytest-html</span>
+                    </div>
+                    <div class="tech-item-large">
+                        <i class="fas fa-cog"></i>
+                        <span>python-dotenv</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Markers -->
+            <section class="project-section">
+                <h2><i class="fas fa-tags"></i> Test Markers</h2>
+                <div class="table-container">
+                    <table class="info-table">
+                        <thead>
+                            <tr>
+                                <th>Marker</th>
+                                <th>Mô tả</th>
+                                <th>Command</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>smoke</code></td>
+                                <td>Quick sanity tests</td>
+                                <td><code>pytest -m smoke</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>regression</code></td>
+                                <td>Full regression suite</td>
+                                <td><code>pytest -m regression</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>slow</code></td>
+                                <td>Slow-running tests</td>
+                                <td><code>pytest -m slow</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>api</code></td>
+                                <td>API tests</td>
+                                <td><code>pytest -m api</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Navigation -->
+            <section class="project-navigation">
+                <a href="../index.html" class="nav-btn prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Portfolio</span>
+                </a>
+                <a href="pinterest_download_playwright.html" class="nav-btn next">
+                    <span>Pinterest Downloader</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Finn Vu. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-bash.min.js"></script>
+</body>
+</html>
